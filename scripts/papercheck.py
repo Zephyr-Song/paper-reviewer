@@ -182,7 +182,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("path", nargs="?", help="论文文件（.tex / .md / .docx / .txt）")
     ap.add_argument("--bib", help="显式指定 .bib 文献库（LaTeX 通常可自动发现）")
     ap.add_argument("--venue", default="generic",
-                    choices=["generic", "chi", "acm", "neurips", "thesis"],
+                    choices=["generic", "chi", "acm", "ieee", "neurips", "thesis"],
                     help="评审口径，决定必需章节集合，默认 generic")
     ap.add_argument("--blind", dest="blind", action="store_true", default=None,
                     help="强制启用双盲匿名检查")

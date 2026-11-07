@@ -31,6 +31,7 @@ REQUIRED: dict[str, list[str]] = {
     "acm": ["introduction", "related", "method", "results", "discussion",
             "limitations", "conclusion"],
     "neurips": ["introduction", "related", "method", "results", "discussion", "conclusion"],
+    "ieee": ["introduction", "related", "method", "results", "discussion", "conclusion"],
     "thesis": ["introduction", "related", "method", "results", "discussion",
                "limitations", "conclusion"],
 }

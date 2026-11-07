@@ -214,6 +214,48 @@ class PapercheckTest(unittest.TestCase):
         issue = next(i for i in payload["issues"] if i["code"] == "STR-001")
         self.assertIn("局限", issue["detail"])
 
+    def test_ai_disclosure_severity_depends_on_venue(self):
+        """非 ACM/CHI 口径下不应断言「ACM/CHI 要求…」，只降级为提示。"""
+        tex = self.write("bad.tex", BAD_TEX)
+        self.write("refs.bib", BAD_BIB)
+
+        r = self.run_cli(str(tex), "--format", "json", "--no-blind")
+        generic = next(i for i in json.loads(r.stdout)["issues"] if i["code"] == "REP-005")
+        self.assertEqual(generic["severity"], "low")
+        self.assertNotIn("ACM", generic["detail"])
+
+        r = self.run_cli(str(tex), "--venue", "chi", "--format", "json", "--no-blind")
+        chi = next(i for i in json.loads(r.stdout)["issues"] if i["code"] == "REP-005")
+        self.assertEqual(chi["severity"], "med")
+
+    def test_quote_text_cannot_satisfy_data_availability(self):
+        """被访者原话里的「make this data available」不该顶替数据可用性声明。"""
+        md = self.write("quote.md", """# A Study
+
+## Abstract
+We interviewed 13 practitioners.
+
+## Introduction
+Ethical approval was granted; all participants gave consent.
+
+## Related Work
+Prior work exists.
+
+## Method
+P9 said: "I don't want to make this data available in a reporting interface."
+
+## Results
+We found things.
+
+## Discussion
+We discuss things.
+
+## Conclusion
+Done.
+""")
+        codes = self.codes(str(md))
+        self.assertIn("REP-003", codes)
+
     def test_min_severity_filters(self):
         tex = self.write("bad.tex", BAD_TEX)
         self.write("refs.bib", BAD_BIB)

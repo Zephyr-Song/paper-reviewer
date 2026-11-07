@@ -19,6 +19,12 @@ agent_created: true
 
 脚本位于本 skill 的 `scripts/`，仅需 Python 3.10+。支持 `.tex` / `.md` / `.docx` / `.txt` / `.pdf`（PDF 需 `pip install pypdf`）。
 
+**输入源优先级：`.tex` > `.md`/`.docx` > `.pdf`。** PDF 只能抽到线性文字，章节层级和 `\cite` 标记全部丢失（结构检查会退化成 `STR-007`，引用计数归零）。arXiv 论文务必先取源码而不是 PDF：
+
+```bash
+curl -sL -o src.bin https://arxiv.org/e-print/<arxiv-id>   # 通常是 .tar.gz
+```
+
 ## 工作模式
 
 | 模式 | 触发语 | 做法 |
@@ -44,7 +50,7 @@ python scripts/papercheck.py <paper.tex> --min-severity med --strict  # CI 门�
 
 | 参数 | 说明 |
 | --- | --- |
-| `--venue chi\|acm\|neurips\|thesis\|generic` | 决定必需章节集合；`chi`/`acm` 默认开启双盲检查 |
+| `--venue chi\|acm\|ieee\|neurips\|thesis\|generic` | 决定必需章节集合；`chi`/`acm` 默认开启双盲检查 |
 | `--blind` / `--no-blind` | 强制开关匿名检查 |
 | `--bib <path>` | 显式指定文献库（Markdown/DOCX 场景） |
 | `--min-severity high\|med\|low` | 只报某级别以上 |

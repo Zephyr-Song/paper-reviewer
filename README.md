@@ -23,7 +23,7 @@
 - **支持内联文献表**：`\begin{thebibliography}` + `\bibitem`（单文件投稿）同样能核对
 - **生成式 AI 声明检测**：ACM/CHI 强制要求，未写会提示
 - **样本量一致性**：正文出现多个 `N = xxx` 时提示核实
-- **多种口径**：`chi` / `acm` / `neurips` / `thesis` / `generic`，决定必需章节集合
+- **多种口径**：`chi` / `acm` / `ieee` / `neurips` / `thesis` / `generic`，决定必需章节集合
 - **摘要一致性**：正文有量化结果而摘要只写「我们做了评估」时报警
 - **CI 可用**：`--strict` 在有严重问题时返回退出码 1
 - **中文/英文论文都支持**：章节别名含中文（摘要 / 引言 / 相关工作 / 方法 / 结果 / 讨论 / 局限 / 结论）
@@ -75,7 +75,7 @@ python scripts/papercheck.py paper.tex --format json -o report.json
 | --- | --- | --- |
 | `path` | — | 论文文件 |
 | `--bib` | 自动发现 | 指定 `.bib` 文献库 |
-| `--venue` | `generic` | `chi` / `acm` / `neurips` / `thesis` / `generic` |
+| `--venue` | `generic` | `chi` / `acm` / `ieee` / `neurips` / `thesis` / `generic` |
 | `--blind` / `--no-blind` | `chi`/`acm` 默认开 | 双盲匿名检查 |
 | `--min-severity` | `low` | 报告保留的最低级别 |
 | `--format` | `md` | `md` / `json` |

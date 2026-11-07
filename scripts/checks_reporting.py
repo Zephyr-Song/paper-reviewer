@@ -19,13 +19,20 @@ ETHICS_RE = re.compile(
 )
 CONSENT_RE = re.compile(r"\bconsent\b|知情同意", re.I)
 DATA_RE = re.compile(
-    r"data (?:is |are )?(?:publicly |openly )?available|data availability|"
-    r"osf\.io|公开数据集|数据可用|数据已公开",
+    r"data availability|"
+    r"data (?:are|is) (?:publicly |openly |freely )?(?:available|released|shared)|"
+    r"(?:datasets?|data) (?:can be|may be|are) (?:obtained|requested|downloaded|accessed)|"
+    r"available (?:at|from|via) (?:https?://|osf\.io|zenodo|figshare|doi)|"
+    r"osf\.io|zenodo\.org|figshare\.com|"
+    r"公开数据集|数据可用|数据已公开|数据可向",
     re.I,
 )
 CODE_RE = re.compile(
-    r"github\.com|code (?:is )?available|source code|open[- ]source|"
-    r"代码(?:已)?公开|开源",
+    r"(?:code|implementation|artifact|artifacts|materials?) "
+    r"(?:is |are |was )?(?:publicly |openly )?(?:available|released|shared)|"
+    r"available (?:at|from|via) https?://(?:www\.)?(?:github|gitlab|zenodo|figshare)|"
+    r"github\.com/[\w.-]+/[\w.-]+|"
+    r"代码(?:已)?公开|代码可从|开源实现",
     re.I,
 )
 AI_DISCLOSE_RE = re.compile(
@@ -42,6 +49,7 @@ def run(doc: Doc, opts: dict) -> list[Issue]:
     issues: list[Issue] = []
     body = doc.body_text()
     full = doc.plain
+    venue = opts.get("venue", "generic")
 
     has_participants = bool(PARTICIPANT_RE.search(body))
 
@@ -72,11 +80,20 @@ def run(doc: Doc, opts: dict) -> list[Issue]:
         ))
 
     if not AI_DISCLOSE_RE.search(full):
-        issues.append(Issue(
-            code="REP-005", severity="med", title="缺少生成式 AI 使用声明",
-            detail="ACM/CHI 要求披露生成式 AI 在写作或分析中的使用情况；未检测到相关表述。",
-            hint="未使用也应显式声明「Generative AI was not used」，比沉默更安全。",
-        ))
+        # 生成式 AI 披露是 ACM/CHI 的硬性要求；其它会议口径只是趋势，降级为提示，
+        # 避免对着 IEEE 稿子说「ACM/CHI 要求…」这种张冠李戴的断言。
+        if venue in ("acm", "chi"):
+            issues.append(Issue(
+                code="REP-005", severity="med", title="缺少生成式 AI 使用声明",
+                detail="ACM/CHI 要求披露生成式 AI 在写作或分析中的使用情况；未检测到相关表述。",
+                hint="未使用也应显式声明「Generative AI was not used」，比沉默更安全。",
+            ))
+        else:
+            issues.append(Issue(
+                code="REP-005", severity="low", title="未声明生成式 AI 使用情况",
+                detail=f"按 venue={venue} 口径不强制，但越来越多会议要求披露；本文未检测到相关表述。",
+                hint="可加一句「Generative AI was not used」或说明具体用途，成本很低。",
+            ))
 
     values = sorted({int(v) for v in N_RE.findall(full)})
     if len(values) > 1:

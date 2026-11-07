@@ -1,6 +1,6 @@
 ---
 name: paper-reviewer
-description: 学术论文体检与审稿助手。用脚本对 .tex/.md/.docx 做确定性检查（章节结构、引用完整性、双盲匿名泄露、过度断言、伦理/数据/代码/生成式 AI 声明缺失、样本量一致性），再按 CHI/ACM/NeurIPS 口径模拟审稿、撰写 rebuttal、打磨贡献声明。当用户要求检查论文、投前自查、模拟审稿意见、写 response letter、判断论文能否投中、或打磨摘要与 contribution 表述时使用。
+description: 学术论文体检与审稿助手。用脚本对 .tex/.md/.docx 做确定性检查（章节结构、引用完整性、双盲匿名泄露、过度断言、伦理/数据/代码/生成式 AI 声明缺失、样本量一致性、摘要与正文数据一致性），再按 CHI/ACM/NeurIPS 口径模拟审稿、撰写 rebuttal、打磨贡献声明。当用户要求检查论文、投前自查、模拟审稿意见、写 response letter、判断论文能否投中、或打磨摘要与 contribution 表述时使用。
 agent_created: true
 ---
 
@@ -84,7 +84,7 @@ python scripts/papercheck.py <paper.tex> --min-severity med --strict  # CI 门�
 
 ## 检查项一览
 
-脚本共 33 项，分 5 类。用 `--list-checks` 查看完整列表。
+脚本共 36 项，分 6 类。用 `--list-checks` 查看完整列表。
 
 | 类别 | 代表检查 |
 | --- | --- |
@@ -93,6 +93,7 @@ python scripts/papercheck.py <paper.tex> --min-severity med --strict  # CI 门�
 | ANO 匿名 | 作者未匿名、邮箱、可识别链接、自引表述、致谢与资助 |
 | STY 文风 | 过度断言、超长句、超长段、被动语态、占位符、模糊量词、术语不一致 |
 | REP 规范 | 伦理/IRB、知情同意、数据可用性、代码可用性、生成式 AI 声明、样本量一致、局限深度 |
+| ABS 摘要 | 摘要无量化结果、摘要数字在正文无对应、结论未呼应量化结果 |
 
 ## 参考文档
 

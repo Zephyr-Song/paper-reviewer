@@ -39,6 +39,13 @@ PLACEHOLDER_EMAIL_RE = re.compile(
     r"^(?:you|your|name|author|someone|user|example)@|@example\.(?:com|org)$", re.I
 )
 
+# 资助/命名信号：命中才算真正的致谢泄露，否则只是 \thanks 注记
+FUNDING_RE = re.compile(
+    r"funded by|funding|grant\s*(?:no|number|#)|supported by|"
+    r"\bnsf\b|\bnih\b|\berc\b|scholarship|fellowship|资助|基金|拨款",
+    re.I,
+)
+
 
 def run(doc: Doc, opts: dict) -> list[Issue]:
     issues: list[Issue] = []
@@ -95,10 +102,20 @@ def run(doc: Doc, opts: dict) -> list[Issue]:
         ))
 
     if ACK_RE.search(doc.raw):
-        issues.append(Issue(
-            code="ANO-005", severity="med", title="存在致谢/资助信息",
-            detail="致谢、\\thanks、资助编号在双盲稿件中通常需要移除或占位。",
-            evidence=[truncate(m.group(0)) for m in ACK_RE.finditer(doc.raw)][:3],
-        ))
+        funding = FUNDING_RE.search(text)
+        if funding:
+            issues.append(Issue(
+                code="ANO-005", severity="med", title="存在致谢与资助信息",
+                detail="致谢、\\thanks 或资助编号在双盲稿件中需要移除或占位。",
+                evidence=[truncate(m.group(0)) for m in ACK_RE.finditer(doc.raw)][:3]
+                         + [truncate(funding.group(0))],
+            ))
+        else:
+            issues.append(Issue(
+                code="ANO-005", severity="low", title="存在 \\thanks 注记",
+                detail="检测到 \\thanks 类注记，但未发现资助编号或机构名。"
+                       "若内容不含身份信息可保留，否则双盲期去掉。",
+                evidence=[truncate(m.group(0)) for m in ACK_RE.finditer(doc.raw)][:3],
+            ))
 
     return issues

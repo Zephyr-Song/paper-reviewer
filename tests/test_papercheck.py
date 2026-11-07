@@ -325,6 +325,73 @@ Done.
         self.assertEqual(r.returncode, 0)
         self.assertIn("ANO-001", r.stdout)
 
+    # ---------- 摘要一致性 ----------
+
+    def test_abs001_abstract_without_numbers(self):
+        tex = self.write("abs1.tex", r"""\documentclass{acmart}
+\title{T}
+\author{Anonymous Author(s)}
+\begin{document}
+\begin{abstract}
+We study whether a tool helps students. We report a formative evaluation.
+\end{abstract}
+\section{Introduction}
+Text.
+\section{Results}
+The tool surfaced 20 of 25 issues (80\%) and p < .05 with N = 30 participants.
+\section{Conclusion}
+It works.
+\end{document}
+""")
+        r = self.run_cli(str(tex), "--format", "json", "--no-blind")
+        codes = {i["code"] for i in json.loads(r.stdout)["issues"]}
+        self.assertIn("ABS-001", codes)
+
+    def test_abs002_abstract_number_not_in_body(self):
+        tex = self.write("abs2.tex", r"""\documentclass{acmart}
+\title{T}
+\author{Anonymous Author(s)}
+\begin{document}
+\begin{abstract}
+The tool raised overlooked issues by 91.7\% over baseline, with 20 of 25
+issues flagged.
+\end{abstract}
+\section{Introduction}
+Text.
+\section{Results}
+The tool surfaced 20 of 25 issues (80\%) and p < .05 with N = 30 participants.
+\section{Conclusion}
+It works, 20 of 25 times.
+\end{document}
+""")
+        r = self.run_cli(str(tex), "--format", "json", "--no-blind")
+        issues = json.loads(r.stdout)["issues"]
+        codes = {i["code"] for i in issues}
+        self.assertIn("ABS-002", codes)
+        issue = next(i for i in issues if i["code"] == "ABS-002")
+        self.assertIn("91.7", " ".join(issue["evidence"]))
+
+    def test_abs_clean_when_consistent(self):
+        tex = self.write("abs3.tex", r"""\documentclass{acmart}
+\title{T}
+\author{Anonymous Author(s)}
+\begin{document}
+\begin{abstract}
+We surface 20 of 25 issues (80\%) that students had not written down, and
+p < .05 with N = 30 participants.
+\end{abstract}
+\section{Introduction}
+Text.
+\section{Results}
+We surfaced 20 of 25 issues (80\%) and p < .05 with N = 30 participants.
+\section{Conclusion}
+Of 25 issues, 80\% were new to the plan text.
+\end{document}
+""")
+        r = self.run_cli(str(tex), "--format", "json", "--no-blind")
+        codes = {i["code"] for i in json.loads(r.stdout)["issues"]}
+        self.assertFalse({c for c in codes if c.startswith("ABS-")}, codes)
+
     # ---------- 真实模板回归 ----------
 
     def test_inline_thebibliography_is_recognized(self):

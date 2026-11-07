@@ -129,7 +129,21 @@ def strip_tex_comments(text: str) -> str:
 
 def tex_to_plain(tex: str) -> str:
     t = re.sub(r"\\(?:begin|end)\s*\{[^}]*\}", " ", tex)
+    # 先整条去掉带参数的命令：只删命令名会把参数内容留在正文里，
+    # 例如 \citep{do2023} 会漏出 "do2023"，\includegraphics{fig1.pdf} 会漏出文件名，
+    # 污染词数统计和数字检测。
+    t = re.sub(
+        r"\\(" + _CITE_CMDS + r")\*?\s*(?:\[[^\]]*\]\s*){0,2}\{[^}]*\}", " ", t
+    )
+    t = re.sub(
+        r"\\(?:label|ref|autoref|cref|Cref|eqref|pageref|nameref|includegraphics"
+        r"|bibliography|bibliographystyle|addbibresource|input|include)"
+        r"\s*(?:\[[^\]]*\])?\s*\{[^}]*\}", " ", t
+    )
     t = re.sub(r"\\[a-zA-Z@]+\*?\s*(?:\[[^\]]*\])?", " ", t)
+    # 转义字符要还原成字面量，不能当未知命令删掉：
+    # 否则 80\% 会变成 80，百分比全部丢失，数字类检查随之失效。
+    t = re.sub(r"\\([%&$#_{}])", r"\1", t)
     t = re.sub(r"\\.", " ", t)
     t = t.replace("{", "").replace("}", "").replace("~", " ")
     # LaTeX 里单个换行只等于空格，空行才是分段。源码硬换行不能当作

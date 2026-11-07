@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import checks_anonymize  # noqa: E402
 import checks_citation  # noqa: E402
+import checks_consistency  # noqa: E402
 import checks_reporting  # noqa: E402
 import checks_structure  # noqa: E402
 import checks_style  # noqa: E402
@@ -42,7 +43,10 @@ MODULES = [
     ("ANO", checks_anonymize),
     ("STY", checks_style),
     ("REP", checks_reporting),
+    ("ABS", checks_consistency),
 ]
+
+CATEGORY_ORDER = ["STR", "CIT", "ANO", "STY", "REP", "ABS"]
 
 CHECK_INDEX = [
     ("STR-001", "缺少必需章节"), ("STR-002", "过短/空章节"), ("STR-003", "讨论/局限篇幅偏薄"),
@@ -57,6 +61,8 @@ CHECK_INDEX = [
     ("REP-001", "缺少伦理/IRB 声明"), ("REP-002", "缺少知情同意"), ("REP-003", "缺少数据可用性"),
     ("REP-004", "缺少代码可用性"), ("REP-005", "缺少生成式 AI 声明"),
     ("REP-006", "样本量表述不一致"), ("REP-007", "局限讨论过于简略"),
+    ("ABS-001", "摘要未包含量化结果"), ("ABS-002", "摘要数字在正文无对应"),
+    ("ABS-003", "结论未呼应量化结果"),
 ]
 
 
@@ -132,7 +138,7 @@ def render_md(doc, issues: list[Issue], opts: dict) -> str:
         by_cat.setdefault(i.category, Counter())[i.severity] += 1
     out.append("| 类别 | 严重 | 中等 | 提示 |")
     out.append("| --- | --- | --- | --- |")
-    for cat in ("STR", "CIT", "ANO", "STY", "REP"):
+    for cat in CATEGORY_ORDER:
         if cat in by_cat:
             c = by_cat[cat]
             out.append(f"| {CATEGORY_LABEL[cat]} | {c.get('high', 0)} | {c.get('med', 0)} | {c.get('low', 0)} |")

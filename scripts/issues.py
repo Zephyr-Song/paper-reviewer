@@ -14,6 +14,7 @@ CATEGORY_LABEL = {
     "ANO": "匿名",
     "STY": "文风",
     "REP": "报告规范",
+    "ABS": "摘要一致",
 }
 
 

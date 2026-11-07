@@ -20,6 +20,7 @@
 - **33 项检查**，分结构 / 引用 / 匿名 / 文风 / 报告规范五类
 - **双盲泄露扫描**：作者字段、邮箱、GitHub 链接、自引表述、致谢与资助（自动放行 `anonymous` 镜像）
 - **引用双向核对**：正文引用 vs `.bib` 条目，检出缺失键、未引用条目、重复键
+- **支持内联文献表**：`\begin{thebibliography}` + `\bibitem`（单文件投稿）同样能核对
 - **生成式 AI 声明检测**：ACM/CHI 强制要求，未写会提示
 - **样本量一致性**：正文出现多个 `N = xxx` 时提示核实
 - **多种口径**：`chi` / `acm` / `neurips` / `thesis` / `generic`，决定必需章节集合
@@ -149,7 +150,7 @@ paper.tex ──► docmodel.py ──► checks_*.py ──► papercheck.py �
 python tests/test_papercheck.py -v
 ```
 
-16 项测试，用「问题论文」和「规范论文」两份夹具同时验证**检出率**与**误报率**，覆盖 LaTeX/Markdown/DOCX 三种输入、口径切换、匿名开关、JSON 输出、CI 退出码，以及 ACM 模板 `\title{...\thanks{...}}` 这类真实排版回归。
+18 项测试，用「问题论文」和「规范论文」两份夹具同时验证**检出率**与**误报率**，覆盖 LaTeX/Markdown/DOCX 三种输入、口径切换、匿名开关、JSON 输出、CI 退出码，以及 ACM 模板 `\title{...\thanks{...}}` 这类真实排版回归。
 
 ## 已知限制
 

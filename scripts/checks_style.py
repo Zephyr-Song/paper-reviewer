@@ -46,7 +46,9 @@ VARIANT_PAIRS = [
     ("user-name", "username"),
 ]
 
-TYPOS_RE = re.compile(r"\s{2,}|\s+[,.;:](?=\s)|\.\.(?!\.)")
+# 只查「标点前多空格」和「双句点」这类真排版瑕疵。
+# 不要查连续空格：LaTeX 源码缩进会大量命中，属于正常写法。
+TYPOS_RE = re.compile(r"[ \t]+[,.;:](?=\s|$)|\.\.(?!\.)")
 
 
 def run(doc: Doc, opts: dict) -> list[Issue]:
@@ -139,7 +141,7 @@ def run(doc: Doc, opts: dict) -> list[Issue]:
     if len(typos) >= 5:
         issues.append(Issue(
             code="STY-008", severity="low", title="排版细节问题",
-            detail=f"{len(typos)} 处多余空格或标点前空格。",
+            detail=f"{len(typos)} 处标点前多余空格或重复句点。",
         ))
 
     return issues

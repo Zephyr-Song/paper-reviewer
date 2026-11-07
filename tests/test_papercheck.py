@@ -327,6 +327,51 @@ Done.
 
     # ---------- 真实模板回归 ----------
 
+    def test_inline_thebibliography_is_recognized(self):
+        """单文件投稿用 \\begin{thebibliography} + \\bibitem，不该报「未找到文献库」。"""
+        tex = self.write("inline.tex", r"""\documentclass{acmart}
+\title{T}
+\author{Anonymous Author(s)}
+\begin{document}
+\section{Introduction}
+Prior work \citep{known2023} and \citet{other2024} both matter.
+\section{Discussion}
+We discuss the findings in detail here.
+\section{Conclusion}
+We conclude.
+\begin{thebibliography}{9}
+\bibitem[Known(2023)]{known2023} Known. 2023.
+\bibitem[Other(2024)]{other2024} Other. 2024.
+\end{thebibliography}
+\end{document}
+""")
+        r = self.run_cli(str(tex), "--format", "json", "--no-blind")
+        payload = json.loads(r.stdout)
+        codes = {i["code"] for i in payload["issues"]}
+        self.assertNotIn("CIT-003", codes, payload["issues"])
+        self.assertNotIn("CIT-001", codes, payload["issues"])
+        self.assertEqual(payload["stats"]["bib_entries"], 2)
+
+    def test_inline_bib_reports_undefined_key(self):
+        tex = self.write("inline2.tex", r"""\documentclass{acmart}
+\title{T}
+\author{Anonymous Author(s)}
+\begin{document}
+\section{Introduction}
+Prior work \citep{ghost2020} is cited.
+\section{Discussion}
+Text.
+\section{Conclusion}
+Text.
+\begin{thebibliography}{9}
+\bibitem[Known(2023)]{known2023} Known. 2023.
+\end{thebibliography}
+\end{document}
+""")
+        r = self.run_cli(str(tex), "--format", "json", "--no-blind")
+        codes = {i["code"] for i in json.loads(r.stdout)["issues"]}
+        self.assertIn("CIT-001", codes)
+
     def test_title_excludes_thanks_content(self):
         """ACM 模板常见 \\title{...\\thanks{...}}，thanks 不能污染标题。"""
         import docmodel

@@ -30,6 +30,10 @@ _CITE_RE = re.compile(r"\\(" + _CITE_CMDS + r")\*?\s*(?:\[[^\]]*\]\s*){0,2}\{([^
 _LABEL_RE = re.compile(r"\\label\{([^}]*)\}")
 _REF_RE = re.compile(r"\\(?:ref|autoref|cref|Cref|eqref|pageref|nameref)\{([^}]*)\}")
 _BIBFILE_RE = re.compile(r"\\(?:bibliography|addbibresource)\s*(?:\[[^\]]*\])?\s*\{([^}]*)\}")
+_THEBIB_RE = re.compile(
+    r"\\begin\{thebibliography\}(?:\{[^}]*\})?(.*?)\\end\{thebibliography\}", re.S
+)
+_BIBITEM_RE = re.compile(r"\\bibitem(?:\[([^\]]*)\])?\s*\{([^}]*)\}")
 _TITLE_RE = re.compile(r"\\title\s*(?:\[[^\]]*\])?\s*\{", re.I)
 _AUTHOR_RE = re.compile(r"\\author\s*(?:\[[^\]]*\])?\s*\{", re.I)
 _ABSTRACT_RE = re.compile(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", re.S | re.I)
@@ -128,8 +132,12 @@ def tex_to_plain(tex: str) -> str:
     t = re.sub(r"\\[a-zA-Z@]+\*?\s*(?:\[[^\]]*\])?", " ", t)
     t = re.sub(r"\\.", " ", t)
     t = t.replace("{", "").replace("}", "").replace("~", " ")
-    t = re.sub(r"[ \t]+", " ", t)
-    t = re.sub(r"\n{2,}", "\n", t)
+    # LaTeX 里单个换行只等于空格，空行才是分段。源码硬换行不能当作
+    # 段落或句子边界，否则句长、段长统计会全部失真。
+    t = re.sub(r"\n[ \t]*\n[ \t\n]*", "\x00", t)
+    t = re.sub(r"\s*\n\s*", " ", t)
+    t = t.replace("\x00", "\n\n")
+    t = re.sub(r"[ \t]{2,}", " ", t)
     return t.strip()
 
 
@@ -253,6 +261,27 @@ def find_bib_files(tex_path: Path, tex_raw: str) -> list[Path]:
     return found
 
 
+def parse_inline_bib(tex_raw: str) -> dict[str, dict]:
+    """解析 \\begin{thebibliography} + \\bibitem 内联文献表。
+
+    单文件投稿（Overleaf 打包）常用这种写法，不应被当成「没有文献库」。
+    年份从可选标签里取，如 \\bibitem[Do et al.(2023)]{do2023}。
+    """
+    out: dict[str, dict] = {}
+    for m in _THEBIB_RE.finditer(tex_raw):
+        for bm in _BIBITEM_RE.finditer(m.group(1)):
+            label = (bm.group(1) or "").strip()
+            key = bm.group(2).strip()
+            if not key:
+                continue
+            year = ""
+            ym = re.search(r"(19|20)\d{2}", label)
+            if ym:
+                year = ym.group(0)
+            out[key] = {"year": year, "label": label, "__type": "inline"}
+    return out
+
+
 # ---------------------------------------------------------------- 各格式解析
 
 
@@ -318,6 +347,10 @@ def _load_tex(path: Path, raw: str) -> Doc:
         e, d = parse_bib(bp)
         bib.update(e)
         dups.extend(d)
+
+    # 内联文献表（\begin{thebibliography} + \bibitem），有 .bib 时以 .bib 为准
+    for key, fields in parse_inline_bib(cleaned).items():
+        bib.setdefault(key, fields)
 
     return Doc(
         path=path,

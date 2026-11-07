@@ -63,7 +63,8 @@ python scripts/papercheck.py <paper.tex> --min-severity med --strict  # CI 门�
 | 情况 | 说明 |
 | --- | --- |
 | 章节命名非常规 | 如用 "Findings" 代替 "Results"、用 "Threats to Validity" 代替 "Limitations"，多数别名已覆盖，未覆盖的按命名习惯判断 |
-| 引用全走 `\citep` 宏包自定义命令 | 自定义 `\newcommand{\mycite}` 不被识别，需人工确认引用数 |
+| 引用全走自定义宏 | `\newcommand{\mycite}` 不被识别，需人工确认引用数 |
+| 单文件投稿无 `.bib` | 已支持解析 `\begin{thebibliography}` + `\bibitem`，不会再误报缺文献库 |
 | 匿名仓库被判为泄露 | 已排除含 `anonymous` 的 URL，其他匿名镜像需人工确认 |
 | 纯中文论文的英文文风检查 | STY 类检查以英文为主，中文部分只看占位符与术语一致性 |
 

@@ -20,10 +20,14 @@ SELF_REF = [
     "笔者曾", "我们此前",
 ]
 
+# 只匹配「致谢」这一结构，不匹配正文里把 acknowledgment 当研究概念用的情形
 ACK_RE = re.compile(
-    r"\\thanks\s*\{|\\acknowledg|acknowledg(?:e)?ments?|致谢|"
-    r"funded by|funding|grant\s*(?:no|number|#)|supported by (?:the )?(?:nsf|nih|erc)",
-    re.I,
+    r"\\thanks\s*\{"
+    r"|\\begin\{acknowledg"
+    r"|\\(?:section|paragraph|subsection)\*?\{\s*acknowledg"
+    r"|^[ \t]*acknowledg(?:e)?ments?[ \t]*:?[ \t]*$"
+    r"|致谢",
+    re.I | re.M,
 )
 
 # 模板占位符：投稿前必须替换，但和「真实姓名」是两个不同的问题

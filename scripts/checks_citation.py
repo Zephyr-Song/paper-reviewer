@@ -21,11 +21,11 @@ def run(doc: Doc, opts: dict) -> list[Issue]:
     issues: list[Issue] = []
     has_bib = bool(doc.bib)
 
-    if doc.kind == "tex" and not doc.bib_paths:
+    if doc.kind == "tex" and not doc.bib_paths and not has_bib:
         issues.append(Issue(
-            code="CIT-003", severity="med", title="未找到 .bib 文件",
-            detail="源文件里没有 \\bibliography{} / \\addbibresource{}，目录下也没有 .bib。"
-                   "引用无法核对，跳过条目级检查。",
+            code="CIT-003", severity="med", title="未找到文献库",
+            detail="源文件里没有 \\bibliography{} / \\addbibresource{}，目录下没有 .bib，"
+                   "也没有 \\begin{thebibliography} 内联文献表。引用无法核对，跳过条目级检查。",
             hint="用 --bib 显式指定文献库路径。",
         ))
     elif doc.kind == "tex" and doc.bib_paths and not has_bib:

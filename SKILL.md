@@ -17,7 +17,7 @@ agent_created: true
 
 ## 前置
 
-脚本位于本 skill 的 `scripts/`，仅需 Python 3.10+，零第三方依赖。支持 `.tex` / `.md` / `.docx` / `.txt`。
+脚本位于本 skill 的 `scripts/`，仅需 Python 3.10+。支持 `.tex` / `.md` / `.docx` / `.txt` / `.pdf`（PDF 需 `pip install pypdf`）。
 
 ## 工作模式
 
@@ -84,11 +84,11 @@ python scripts/papercheck.py <paper.tex> --min-severity med --strict  # CI 门�
 
 ## 检查项一览
 
-脚本共 36 项，分 6 类。用 `--list-checks` 查看完整列表。
+脚本共 37 项，分 6 类。用 `--list-checks` 查看完整列表。
 
 | 类别 | 代表检查 |
 | --- | --- |
-| STR 结构 | 缺必需章节、空章节、讨论/局限篇幅过薄、标题缺失、层级跳跃 |
+| STR 结构 | 缺必需章节、空章节、讨论/局限篇幅过薄、标题缺失、层级跳跃、无章节结构（PDF/表单） |
 | CIT 引用 | 引用键不存在、bib 条目未引用、重复键、文献库缺失、近五年占比偏低 |
 | ANO 匿名 | 作者未匿名、邮箱、可识别链接、自引表述、致谢与资助 |
 | STY 文风 | 过度断言、超长句、超长段、被动语态、占位符、模糊量词、术语不一致 |

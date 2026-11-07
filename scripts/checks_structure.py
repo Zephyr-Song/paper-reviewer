@@ -40,6 +40,18 @@ SKIP_EMPTY = ("reference", "bibliograph", "参考文献", "致谢", "acknowledg"
 
 def run(doc: Doc, opts: dict) -> list[Issue]:
     issues: list[Issue] = []
+
+    # 没有章节结构时（PDF 表单、无标题的纯文本），结构类检查全部无意义，
+    # 直接命中会制造大量噪声，改为给一条说明。
+    if not doc.sections:
+        issues.append(Issue(
+            code="STR-007", severity="low", title="未识别到章节结构",
+            detail="这份文件没有可识别的标题层级（常见于 PDF 表单、扫描件或未使用标题的文件），"
+                   "结构类检查（必需章节、空章节、层级跳跃）已跳过；引用与文风类检查仍然有效。",
+            hint="若这是论文稿，请改用带 \\section 或 Markdown 标题的版本，结构检查才有意义。",
+        ))
+        return issues
+
     venue = opts.get("venue", "generic")
     required = REQUIRED.get(venue, REQUIRED["generic"])
     titles_lower = [s.title.lower() for s in doc.sections]

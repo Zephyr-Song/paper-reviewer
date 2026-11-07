@@ -78,6 +78,7 @@ class Doc:
     title: str = ""
     authors: str = ""
     abstract: str = ""
+    meta: dict = field(default_factory=dict)
 
     # ---- 便捷访问 ----
 
@@ -475,21 +476,77 @@ def _load_docx(path: Path) -> Doc:
     )
 
 
+def _load_pdf(path: Path) -> Doc:
+    """PDF 只做文本抽取，不推断章节结构（PDF 没有可靠的标题层级）。"""
+    try:
+        from pypdf import PdfReader  # type: ignore
+    except ImportError:
+        try:
+            from PyPDF2 import PdfReader  # type: ignore
+        except ImportError as e:
+            raise ValueError(
+                "读取 PDF 需要可选依赖，请先安装：pip install pypdf"
+            ) from e
+
+    try:
+        reader = PdfReader(str(path))
+        pages = [(page.extract_text() or "") for page in reader.pages]
+    except Exception as e:
+        raise ValueError(f"PDF 解析失败：{e}") from e
+
+    raw = "\n\n".join(p for p in pages if p.strip())
+    if not raw.strip():
+        raise ValueError(
+            "PDF 中没有可提取的文本，可能是扫描件。需要 OCR 后再分析。"
+        )
+
+    title = ""
+    try:
+        title = (reader.metadata.title or "").strip()  # type: ignore[union-attr]
+    except Exception:
+        pass
+    if not title:
+        for line in raw.split("\n"):
+            if len(line.strip()) > 8:
+                title = line.strip()[:160]
+                break
+
+    return Doc(
+        path=path,
+        kind="pdf",
+        raw=raw,
+        plain=raw,
+        sections=[],
+        title=title,
+        meta={"pages": len(pages)},
+    )
+
+
 def load(path: str | Path) -> Doc:
     p = Path(path).expanduser()
     if not p.is_file():
         raise FileNotFoundError(f"找不到文件：{p}")
     ext = p.suffix.lower()
 
+    if ext == ".pdf":
+        return _load_pdf(p)
     if ext == ".docx":
         return _load_docx(p)
 
-    raw = p.read_text(encoding="utf-8", errors="replace")
+    blob = p.read_bytes()
     if ext == ".doc":
-        raise ValueError("不支持旧版 .doc，请另存为 .docx")
+        raise ValueError("不支持旧版 .doc，请另存为 .docx 或 .pdf")
+
+    # 未知或文本扩展名：先判断是不是二进制，避免把 PDF/图片当文本读成乱码
+    if b"\x00" in blob[:4096]:
+        raise ValueError(
+            f"无法按文本解析 {ext or '无扩展名'} 文件（疑似二进制）。"
+            "支持：.tex / .ltx / .md / .txt / .docx / .pdf"
+        )
+
+    raw = blob.decode("utf-8", errors="replace")
     if ext in TEX_EXTS:
         return _load_tex(p, raw)
     if ext in MD_EXTS:
         return _load_md(p, raw)
-    # 未知扩展名：按纯文本处理
     return _load_md(p, raw)

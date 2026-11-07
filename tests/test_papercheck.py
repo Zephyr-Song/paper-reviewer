@@ -306,6 +306,15 @@ Done.
 
     # ---------- 边界 ----------
 
+    def test_binary_file_rejected_not_read_as_text(self):
+        """二进制文件不能被当文本读成乱码——静默输出垃圾比报错更糟。"""
+        p = self.dir / "blob.bin"
+        p.write_bytes(b"\x00\x01\x02\x03not a paper")
+        r = self.run_cli(str(p))
+        self.assertEqual(r.returncode, 3)
+        self.assertIn("二进制", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+
     def test_missing_file_returns_3(self):
         r = self.run_cli(str(self.dir / "nope.tex"))
         self.assertEqual(r.returncode, 3)
